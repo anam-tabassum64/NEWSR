@@ -162,8 +162,62 @@ const TOPIC_ARTICLES = {
   ],
 };
 
+const PUBLISHER_SEARCH_DOMAINS = {
+  "NEWSR Desk": "news.google.com",
+  "Digital Daily": "www.theverge.com",
+  "Signal Watch": "www.reuters.com",
+  "AI Brief": "openai.com",
+  "Compute Journal": "www.technologyreview.com",
+  "Venture Grid": "techcrunch.com",
+  "Platform Report": "thenewstack.io",
+  "Tech Today": "www.cnet.com",
+  "Security Ledger": "krebsonsecurity.com",
+  "Market Brief": "www.bloomberg.com",
+  "Workplace Journal": "www.wsj.com",
+  "Startup Ledger": "techcrunch.com",
+  "Sports Central": "www.espn.com",
+  "Performance Weekly": "theathletic.com",
+  "Training Ground": "www.goal.com",
+  "Science Desk": "www.sciencedaily.com",
+  "Nature Monitor": "www.nature.com",
+  "Cosmos Review": "www.space.com",
+  "Health Journal": "www.healthline.com",
+  "Wellness Wire": "www.medicalnewstoday.com",
+  "Care Report": "www.who.int",
+};
+
+const PUBLISHER_HOME_URLS = {
+  "NEWSR Desk": "https://news.google.com/",
+  "Digital Daily": "https://www.theverge.com/",
+  "Signal Watch": "https://www.reuters.com/world/",
+  "AI Brief": "https://openai.com/news/",
+  "Compute Journal": "https://www.technologyreview.com/topic/artificial-intelligence/",
+  "Venture Grid": "https://techcrunch.com/category/startups/",
+  "Platform Report": "https://thenewstack.io/",
+  "Tech Today": "https://www.cnet.com/tech/",
+  "Security Ledger": "https://krebsonsecurity.com/",
+  "Market Brief": "https://www.bloomberg.com/markets",
+  "Workplace Journal": "https://www.wsj.com/",
+  "Startup Ledger": "https://techcrunch.com/startups/",
+  "Sports Central": "https://www.espn.com/",
+  "Performance Weekly": "https://theathletic.com/",
+  "Training Ground": "https://www.goal.com/",
+  "Science Desk": "https://www.sciencedaily.com/",
+  "Nature Monitor": "https://www.nature.com/news",
+  "Cosmos Review": "https://www.space.com/",
+  "Health Journal": "https://www.healthline.com/health-news",
+  "Wellness Wire": "https://www.medicalnewstoday.com/",
+  "Care Report": "https://www.who.int/news-room",
+};
+
 function buildPublishedAt(offsetHours) {
   return new Date(Date.now() - offsetHours * 60 * 60 * 1000).toISOString();
+}
+
+function buildPublisherSearchUrl(title, source) {
+  const sourceDomain = PUBLISHER_SEARCH_DOMAINS[source] || "news.google.com";
+  const query = encodeURIComponent(`site:${sourceDomain} "${title}"`);
+  return `https://www.google.com/search?q=${query}`;
 }
 
 export function getFallbackNews(topic, page = 1, sortBy = "latest") {
@@ -178,7 +232,8 @@ export function getFallbackNews(topic, page = 1, sortBy = "latest") {
         description: article.description,
         source: article.source,
         image: article.image,
-        url: `${article.url}?batch=${batch}`,
+        url: PUBLISHER_HOME_URLS[article.source] || buildPublisherSearchUrl(article.title, article.source),
+        isFallback: true,
         publishedAt: buildPublishedAt((batch - 1) * 6 + index + 1),
       });
     });

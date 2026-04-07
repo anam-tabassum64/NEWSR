@@ -20,6 +20,10 @@ export function useBookmarks() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(bookmarks));
   }, [bookmarks]);
 
+  const replaceBookmarks = useCallback((nextBookmarks) => {
+    setBookmarks(Array.isArray(nextBookmarks) ? nextBookmarks : []);
+  }, []);
+
   const toggleBookmark = useCallback((article) => {
     let added = false;
 
@@ -42,5 +46,5 @@ export function useBookmarks() {
     [bookmarks]
   );
 
-  return { bookmarks, toggleBookmark, isBookmarked };
+  return { bookmarks, setBookmarks: replaceBookmarks, toggleBookmark, isBookmarked };
 }

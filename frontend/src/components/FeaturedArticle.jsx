@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { formatDate } from "../utils/formatDate";
 
 function FeaturedArticle({ article, onBookmark, isBookmarked, onArticleClick }) {
@@ -6,6 +7,11 @@ function FeaturedArticle({ article, onBookmark, isBookmarked, onArticleClick }) 
   }
 
   const bookmarked = isBookmarked(article.url);
+  const [imageVisible, setImageVisible] = useState(Boolean(article.image));
+
+  useEffect(() => {
+    setImageVisible(Boolean(article.image));
+  }, [article.image]);
 
   return (
     <article
@@ -21,8 +27,15 @@ function FeaturedArticle({ article, onBookmark, isBookmarked, onArticleClick }) 
       }}
     >
       <div className="featured-article__media">
-        {article.image ? (
-          <img src={article.image} alt={article.title} className="featured-article__image" />
+        {imageVisible ? (
+          <img
+            src={article.image}
+            alt={article.title}
+            className="featured-article__image"
+            loading="eager"
+            referrerPolicy="no-referrer"
+            onError={() => setImageVisible(false)}
+          />
         ) : (
           <div className="featured-article__placeholder" aria-hidden="true">
             <span>NEWSR</span>

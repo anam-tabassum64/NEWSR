@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { formatDate } from "../utils/formatDate";
 import { highlightText } from "../utils/highlightText";
 
@@ -10,6 +11,11 @@ function ArticleCard({
 }) {
   const bookmarked = isBookmarked(article.url);
   const titleHtml = highlightText(article.title, searchQuery);
+  const [imageVisible, setImageVisible] = useState(Boolean(article.image));
+
+  useEffect(() => {
+    setImageVisible(Boolean(article.image));
+  }, [article.image]);
 
   return (
     <article
@@ -25,8 +31,15 @@ function ArticleCard({
       }}
     >
       <div className="article-card__media">
-        {article.image ? (
-          <img src={article.image} alt={article.title} className="article-card__image" />
+        {imageVisible ? (
+          <img
+            src={article.image}
+            alt={article.title}
+            className="article-card__image"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={() => setImageVisible(false)}
+          />
         ) : (
           <div className="article-card__placeholder" aria-hidden="true">
             NEWS

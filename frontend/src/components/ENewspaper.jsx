@@ -89,7 +89,7 @@ function ENewspaper() {
   const visibleLanguageCount = Object.keys(groupedByLanguage).length;
 
   function openPaper(url) {
-    window.open(url, "_blank");
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   function clearFilters() {
@@ -97,6 +97,11 @@ function ENewspaper() {
     setActiveState("all");
     setSearchQuery("");
     setViewMode("grid");
+  }
+
+  function selectState(state) {
+    setActiveState(state);
+    setActiveTab("all");
   }
 
   function renderGridCard(paper) {
@@ -151,7 +156,7 @@ function ENewspaper() {
         <div>
           <div className="epaper-list-name">{paper.name}</div>
           <div className="epaper-list-sub">
-            {paper.state} · {paper.language}
+            {paper.state} | {paper.language}
           </div>
         </div>
         <div className="epaper-list-desc">
@@ -165,7 +170,7 @@ function ENewspaper() {
             openPaper(paper.url);
           }}
         >
-          Open →
+          Open -&gt;
         </button>
       </article>
     );
@@ -179,7 +184,7 @@ function ENewspaper() {
           <h2>eNewspaper</h2>
         </div>
         <span className="section-badge">
-          {visibleCount} papers · {visibleLanguageCount} languages
+          {visibleCount} papers | {visibleLanguageCount} languages
         </span>
       </div>
 
@@ -209,7 +214,7 @@ function ENewspaper() {
             type="text"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search by name, language or state…"
+            placeholder="Search by name, language or state..."
           />
           {searchQuery ? (
             <button
@@ -218,7 +223,7 @@ function ENewspaper() {
               onClick={() => setSearchQuery("")}
               aria-label="Clear search"
             >
-              ×
+              x
             </button>
           ) : null}
         </div>
@@ -230,7 +235,7 @@ function ENewspaper() {
             onClick={() => setViewMode("grid")}
             aria-label="Grid view"
           >
-            ⊞
+            [ ]
           </button>
           <button
             type="button"
@@ -238,7 +243,7 @@ function ENewspaper() {
             onClick={() => setViewMode("list")}
             aria-label="List view"
           >
-            ☰
+            =
           </button>
         </div>
       </div>
@@ -290,10 +295,7 @@ function ENewspaper() {
               key={state}
               type="button"
               className={`epaper-state-item ${activeState === state ? "active" : ""}`}
-              onClick={() => {
-                setActiveState(state);
-                setActiveTab("all");
-              }}
+              onClick={() => selectState(state)}
             >
               <span className="epaper-state-name">{state}</span>
               <span className="epaper-state-count">{stateCounts[state]}</span>
@@ -301,16 +303,37 @@ function ENewspaper() {
           ))}
         </div>
 
-        <div className="epaper-map-placeholder">
-          <div style={{ fontSize: 24 }}>🗺️</div>
-          <div className="epaper-map-copy">Click a state on the map to filter papers</div>
-          <div className="epaper-map-note">(Interactive SVG map — future enhancement)</div>
+        <div className="epaper-map-placeholder epaper-map-placeholder--interactive">
+          <div className="epaper-map-icon">Map</div>
+          <div className="epaper-map-copy">Filter papers by state</div>
+          <div className="epaper-map-note">Tap a state chip below to update the list instantly.</div>
+
+          <div className="epaper-map-chips">
+            <button
+              type="button"
+              className={`epaper-map-chip ${activeState === "all" ? "active" : ""}`}
+              onClick={() => setActiveState("all")}
+            >
+              All India
+            </button>
+
+            {visibleStates.map((state) => (
+              <button
+                key={state}
+                type="button"
+                className={`epaper-map-chip ${activeState === state ? "active" : ""}`}
+                onClick={() => selectState(state)}
+              >
+                {state}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {!visibleCount ? (
         <div className="epaper-empty">
-          <div className="epaper-empty-icon">🗞️</div>
+          <div className="epaper-empty-icon">News</div>
           <div className="epaper-empty-title">No papers found</div>
           <div className="epaper-empty-sub">Try a different language or clear the search</div>
           <button type="button" className="primary-button" onClick={clearFilters}>
@@ -341,17 +364,12 @@ function ENewspaper() {
           ) : null}
 
           {Object.entries(groupedByLanguage).map(([language, papers]) => {
-            const languageTheme = LANGUAGE_COLORS[language] || {
-              accent: "#185FA5",
-            };
+            const languageTheme = LANGUAGE_COLORS[language] || { accent: "#185FA5" };
 
             return (
               <section key={language} className="epaper-section">
                 <div className="epaper-lang-header">
-                  <span
-                    className="epaper-lang-bar"
-                    style={{ backgroundColor: languageTheme.accent }}
-                  />
+                  <span className="epaper-lang-bar" style={{ backgroundColor: languageTheme.accent }} />
                   <span className="epaper-lang-name">{language}</span>
                   <span className="epaper-lang-count">{papers.length}</span>
                   <span className="epaper-lang-line" />

@@ -36,12 +36,17 @@ export function useRecommendations() {
     return nextHistory;
   }, []);
 
+  const replaceHistory = useCallback((nextHistory) => {
+    setClickHistory(Array.isArray(nextHistory) ? nextHistory.slice(0, 10) : []);
+  }, []);
+
   return {
     recommendations,
     loading,
     getRecommendations,
     clearRecommendations,
     clickHistory,
+    setClickHistory: replaceHistory,
     addToHistory,
   };
 }

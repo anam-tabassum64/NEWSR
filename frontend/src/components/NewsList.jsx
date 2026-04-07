@@ -28,14 +28,18 @@ function NewsList({
     return <p className="empty-state">No articles found. Try a different topic.</p>;
   }
 
+  function getArticleKey(article, index) {
+    return article.id ?? `${article.url || "article"}-${article.publishedAt || "time"}-${index}`;
+  }
+
   return (
     <section className="news-list">
       <div className="news-grid">
         {loading && !articles.length
           ? Array.from({ length: 6 }).map((_, index) => <SkeletonCard key={index} />)
-          : articles.map((article) => (
+          : articles.map((article, index) => (
               <ArticleCard
-                key={article.url}
+                key={getArticleKey(article, index)}
                 article={article}
                 onArticleClick={onArticleClick}
                 searchQuery={searchQuery}

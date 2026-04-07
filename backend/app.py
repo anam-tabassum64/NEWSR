@@ -1,14 +1,27 @@
+# FILE: backend/app.py
+import os
+import re
 from collections import Counter
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from html import unescape
-import re
+from urllib.parse import quote_plus
 from xml.etree import ElementTree
 
 import requests
 from flask import Flask, jsonify, request
 from flask_cors import CORS
+from flask_mail import Mail
 
+from auth import (
+    forgot_password,
+    get_current_user,
+    login_user,
+    logout_user,
+    register_user,
+    reset_password,
+    update_preferences,
+)
 from pdf_extractor import (
     detect_topics_from_text,
     extract_headlines_from_text,
@@ -21,20 +34,129 @@ from recommender import NewsRecommender
 app = Flask(__name__)
 CORS(app)
 app.config["MAX_CONTENT_LENGTH"] = 50 * 1024 * 1024
+app.config["MAIL_SERVER"] = "smtp.gmail.com"
+app.config["MAIL_PORT"] = 587
+app.config["MAIL_USE_TLS"] = True
+app.config["MAIL_USERNAME"] = os.environ.get("MAIL_USERNAME", "")
+app.config["MAIL_PASSWORD"] = os.environ.get("MAIL_PASSWORD", "")
+app.config["MAIL_DEFAULT_SENDER"] = (
+    "NewsPulse",
+    os.environ.get("MAIL_USERNAME", "your@gmail.com"),
+)
+mail = Mail(app)
 
 NEWSDATA_API_KEY = "YOUR_NEWSDATA_API_KEY"
 CURRENTS_API_KEY = "YOUR_CURRENTS_API_KEY"
 NEWSDATA_URL = "https://newsdata.io/api/1/latest"
 CURRENTS_SEARCH_URL = "https://api.currentsapi.services/v1/search"
 GOOGLE_RSS_URL = "https://news.google.com/rss/search"
+PAGE_SIZE = 18
+RSS_ITEMS_PER_QUERY = 30
+
 TOPIC_QUERY_MAP = {
     "all": "latest news",
     "ai": "artificial intelligence",
     "technology": "technology",
     "business": "business",
+    "startups": "startups",
+    "politics": "politics",
+    "world": "world news",
+    "crypto": "cryptocurrency",
     "sports": "sports",
     "science": "science",
     "health": "health",
+}
+
+TOPIC_RSS_QUERIES = {
+    "all": ["latest news", "breaking news", "world headlines"],
+    "ai": ["artificial intelligence", "AI tools", "machine learning"],
+    "technology": ["technology", "software", "cybersecurity"],
+    "business": ["business", "markets", "startups"],
+    "startups": ["startups", "venture capital", "founder news"],
+    "politics": ["politics", "government policy", "election news"],
+    "world": ["world news", "global affairs", "international headlines"],
+    "crypto": ["cryptocurrency", "bitcoin", "blockchain"],
+    "sports": ["sports", "football", "cricket"],
+    "science": ["science", "research", "space exploration"],
+    "health": ["health", "public health", "medical research"],
+}
+
+PUBLISHER_SEARCH_DOMAINS = {
+    "NewsPulse Desk": "news.google.com",
+    "NEWSR Desk": "news.google.com",
+    "Digital Daily": "www.theverge.com",
+    "Signal Watch": "www.reuters.com",
+    "Morning Scope": "apnews.com",
+    "Product Weekly": "techcrunch.com",
+    "AI Brief": "openai.com",
+    "Compute Journal": "www.technologyreview.com",
+    "HealthTech Wire": "www.statnews.com",
+    "Dev Weekly": "stackoverflow.blog",
+    "Venture Grid": "techcrunch.com",
+    "Tech Today": "www.cnet.com",
+    "Platform Report": "thenewstack.io",
+    "Security Ledger": "krebsonsecurity.com",
+    "Codebase Review": "github.blog",
+    "Hardware Weekly": "www.theverge.com",
+    "Market Brief": "www.bloomberg.com",
+    "Retail Wire": "www.retaildive.com",
+    "Workplace Journal": "www.wsj.com",
+    "Startup Ledger": "techcrunch.com",
+    "Finance Radar": "www.ft.com",
+    "Sports Central": "www.espn.com",
+    "Matchday Live": "www.skysports.com",
+    "Performance Weekly": "theathletic.com",
+    "Training Ground": "www.goal.com",
+    "Locker Room News": "www.cbssports.com",
+    "Science Desk": "www.sciencedaily.com",
+    "Nature Monitor": "www.nature.com",
+    "Cosmos Review": "www.space.com",
+    "Research Weekly": "phys.org",
+    "Field Notes": "www.nationalgeographic.com",
+    "Health Journal": "www.healthline.com",
+    "Wellness Wire": "www.medicalnewstoday.com",
+    "Care Report": "www.who.int",
+    "CareTech": "www.fiercehealthcare.com",
+    "Healthy Cities": "www.cdc.gov",
+}
+
+PUBLISHER_HOME_URLS = {
+    "NewsPulse Desk": "https://news.google.com/",
+    "NEWSR Desk": "https://news.google.com/",
+    "Digital Daily": "https://www.theverge.com/",
+    "Signal Watch": "https://www.reuters.com/world/",
+    "Morning Scope": "https://apnews.com/",
+    "Product Weekly": "https://techcrunch.com/",
+    "AI Brief": "https://openai.com/news/",
+    "Compute Journal": "https://www.technologyreview.com/topic/artificial-intelligence/",
+    "HealthTech Wire": "https://www.statnews.com/",
+    "Dev Weekly": "https://stackoverflow.blog/",
+    "Venture Grid": "https://techcrunch.com/category/startups/",
+    "Tech Today": "https://www.cnet.com/tech/",
+    "Platform Report": "https://thenewstack.io/",
+    "Security Ledger": "https://krebsonsecurity.com/",
+    "Codebase Review": "https://github.blog/",
+    "Hardware Weekly": "https://www.theverge.com/tech",
+    "Market Brief": "https://www.bloomberg.com/markets",
+    "Retail Wire": "https://www.retaildive.com/",
+    "Workplace Journal": "https://www.wsj.com/",
+    "Startup Ledger": "https://techcrunch.com/startups/",
+    "Finance Radar": "https://www.ft.com/markets",
+    "Sports Central": "https://www.espn.com/",
+    "Matchday Live": "https://www.skysports.com/",
+    "Performance Weekly": "https://theathletic.com/",
+    "Training Ground": "https://www.goal.com/",
+    "Locker Room News": "https://www.cbssports.com/",
+    "Science Desk": "https://www.sciencedaily.com/",
+    "Nature Monitor": "https://www.nature.com/news",
+    "Cosmos Review": "https://www.space.com/",
+    "Research Weekly": "https://phys.org/",
+    "Field Notes": "https://www.nationalgeographic.com/",
+    "Health Journal": "https://www.healthline.com/health-news",
+    "Wellness Wire": "https://www.medicalnewstoday.com/",
+    "Care Report": "https://www.who.int/news-room",
+    "CareTech": "https://www.fiercehealthcare.com/",
+    "Healthy Cities": "https://www.cdc.gov/",
 }
 
 recommender = NewsRecommender()
@@ -66,22 +188,6 @@ DEMO_ARTICLES = {
             "source": {"name": "Signal Watch"},
             "publishedAt": "2026-04-06T06:55:00Z",
         },
-        {
-            "title": "Five Big Stories Readers Are Following Right Now",
-            "description": "From startups to sports, audience attention is moving quickly between major live topics.",
-            "url": "https://example.com/demo/all/five-big-stories",
-            "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "Morning Scope"},
-            "publishedAt": "2026-04-06T06:20:00Z",
-        },
-        {
-            "title": "Publishers Experiment with Simpler Reading Experiences",
-            "description": "Minimal card layouts and faster pages continue to improve session times on mobile.",
-            "url": "https://example.com/demo/all/publisher-experiments",
-            "image": "https://images.unsplash.com/photo-1515169067868-5387ec356754?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "Product Weekly"},
-            "publishedAt": "2026-04-06T05:30:00Z",
-        },
     ],
     "ai": [
         {
@@ -101,22 +207,6 @@ DEMO_ARTICLES = {
             "publishedAt": "2026-04-06T07:40:00Z",
         },
         {
-            "title": "Hospitals Explore AI Alerts for Early Intervention",
-            "description": "Pilot programs are testing whether predictive systems can flag patient risk sooner.",
-            "url": "https://example.com/demo/ai/hospital-alerts",
-            "image": "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "HealthTech Wire"},
-            "publishedAt": "2026-04-06T07:05:00Z",
-        },
-        {
-            "title": "Developers Depend More on AI Coding Tools Across the Stack",
-            "description": "Engineering teams say autocomplete, refactoring help, and documentation support reduce repetition.",
-            "url": "https://example.com/demo/ai/coding-tools",
-            "image": "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "Dev Weekly"},
-            "publishedAt": "2026-04-06T06:15:00Z",
-        },
-        {
             "title": "AI Startups Focus on Industry-Specific Automation",
             "description": "New products are targeting finance, logistics, and customer support with narrower workflows.",
             "url": "https://example.com/demo/ai/industry-automation",
@@ -126,14 +216,6 @@ DEMO_ARTICLES = {
         },
     ],
     "technology": [
-        {
-            "title": "Consumer Devices Highlight Battery and Camera Gains",
-            "description": "Manufacturers are focusing on practical improvements that matter more than headline specs.",
-            "url": "https://example.com/demo/technology/device-gains",
-            "image": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "Tech Today"},
-            "publishedAt": "2026-04-06T08:05:00Z",
-        },
         {
             "title": "Cloud Teams Push for Faster Deployments",
             "description": "Platform engineers are streamlining release pipelines to reduce waiting and manual checks.",
@@ -149,14 +231,6 @@ DEMO_ARTICLES = {
             "image": "https://images.unsplash.com/photo-1563986768609-322da13575f3?auto=format&fit=crop&w=1200&q=80",
             "source": {"name": "Security Ledger"},
             "publishedAt": "2026-04-06T06:30:00Z",
-        },
-        {
-            "title": "Open Source Tools Continue to Shape Modern Development",
-            "description": "Teams combine internal platforms with community projects to ship features more efficiently.",
-            "url": "https://example.com/demo/technology/open-source",
-            "image": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "Codebase Review"},
-            "publishedAt": "2026-04-06T05:45:00Z",
         },
         {
             "title": "Hardware Startups Chase Practical AI Devices",
@@ -177,14 +251,6 @@ DEMO_ARTICLES = {
             "publishedAt": "2026-04-06T08:00:00Z",
         },
         {
-            "title": "Retail Brands Expand Loyalty Programs for Repeat Sales",
-            "description": "Companies are investing in rewards, memberships, and personalization to hold attention.",
-            "url": "https://example.com/demo/business/loyalty-programs",
-            "image": "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "Retail Wire"},
-            "publishedAt": "2026-04-06T07:25:00Z",
-        },
-        {
             "title": "Remote Work Keeps Reshaping Hiring Strategies",
             "description": "Organizations are broadening talent searches beyond major cities and large offices.",
             "url": "https://example.com/demo/business/remote-hiring",
@@ -200,14 +266,6 @@ DEMO_ARTICLES = {
             "source": {"name": "Startup Ledger"},
             "publishedAt": "2026-04-06T05:40:00Z",
         },
-        {
-            "title": "Investors Watch Consumer Spending for Recovery Signals",
-            "description": "Analysts are focusing on demand patterns across retail, travel, and digital services.",
-            "url": "https://example.com/demo/business/recovery-signals",
-            "image": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "Finance Radar"},
-            "publishedAt": "2026-04-06T04:50:00Z",
-        },
     ],
     "sports": [
         {
@@ -217,14 +275,6 @@ DEMO_ARTICLES = {
             "image": "https://images.unsplash.com/photo-1547347298-4074fc3086f0?auto=format&fit=crop&w=1200&q=80",
             "source": {"name": "Sports Central"},
             "publishedAt": "2026-04-06T08:15:00Z",
-        },
-        {
-            "title": "Young Star Delivers Breakout Performance at Home",
-            "description": "Fans celebrated a standout display that could mark a major step forward this season.",
-            "url": "https://example.com/demo/sports/breakout-performance",
-            "image": "https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "Matchday Live"},
-            "publishedAt": "2026-04-06T07:05:00Z",
         },
         {
             "title": "Coaches Focus on Recovery as Fixture List Grows",
@@ -241,14 +291,6 @@ DEMO_ARTICLES = {
             "image": "https://images.unsplash.com/photo-1508098682722-e99c643e7485?auto=format&fit=crop&w=1200&q=80",
             "source": {"name": "Training Ground"},
             "publishedAt": "2026-04-06T05:35:00Z",
-        },
-        {
-            "title": "Veteran Leadership Helps Squad Through Tight Schedule",
-            "description": "Experienced players are setting the tone as teams navigate intense competition.",
-            "url": "https://example.com/demo/sports/veteran-leadership",
-            "image": "https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "Locker Room News"},
-            "publishedAt": "2026-04-06T04:40:00Z",
         },
     ],
     "science": [
@@ -276,22 +318,6 @@ DEMO_ARTICLES = {
             "source": {"name": "Cosmos Review"},
             "publishedAt": "2026-04-06T06:18:00Z",
         },
-        {
-            "title": "Lab Automation Helps Researchers Run More Experiments",
-            "description": "Teams are adopting software and robotics to reduce manual bottlenecks in testing cycles.",
-            "url": "https://example.com/demo/science/lab-automation",
-            "image": "https://images.unsplash.com/photo-1532187643603-ba119ca4109e?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "Research Weekly"},
-            "publishedAt": "2026-04-06T05:24:00Z",
-        },
-        {
-            "title": "Biologists Share New Findings on Urban Wildlife Adaptation",
-            "description": "Studies suggest some species are changing behavior faster than expected in dense cities.",
-            "url": "https://example.com/demo/science/urban-wildlife",
-            "image": "https://images.unsplash.com/photo-1473773508845-188df298d2d1?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "Field Notes"},
-            "publishedAt": "2026-04-06T04:42:00Z",
-        },
     ],
     "health": [
         {
@@ -318,43 +344,52 @@ DEMO_ARTICLES = {
             "source": {"name": "Care Report"},
             "publishedAt": "2026-04-06T06:04:00Z",
         },
-        {
-            "title": "Digital Health Platforms Add Better Patient Follow-Up",
-            "description": "Providers want smoother post-visit experiences with reminders and simple check-ins.",
-            "url": "https://example.com/demo/health/follow-up",
-            "image": "https://images.unsplash.com/photo-1511174511562-5f7f18b874f8?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "CareTech"},
-            "publishedAt": "2026-04-06T05:08:00Z",
-        },
-        {
-            "title": "Nutrition Programs Explore New Community Partnerships",
-            "description": "Local health groups are connecting schools, clinics, and nonprofits to widen support.",
-            "url": "https://example.com/demo/health/community-partnerships",
-            "image": "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80",
-            "source": {"name": "Healthy Cities"},
-            "publishedAt": "2026-04-06T04:36:00Z",
-        },
     ],
 }
-PAGE_SIZE = 12
+
+
+def get_token_from_request():
+    auth_header = request.headers.get("Authorization", "")
+    if auth_header.startswith("Bearer "):
+        return auth_header[7:]
+    return None
+
+
+def resolve_article_url(article):
+    raw_url = (article.get("url") or "").strip()
+
+    if raw_url and "example.com" not in raw_url:
+        return raw_url
+
+    title = article.get("title") or "latest news"
+    source_value = article.get("source") or {}
+    source_name = source_value.get("name") if isinstance(source_value, dict) else str(source_value)
+
+    direct_source_url = PUBLISHER_HOME_URLS.get(source_name)
+    if direct_source_url:
+        return direct_source_url
+
+    source_domain = PUBLISHER_SEARCH_DOMAINS.get(source_name, "news.google.com")
+    query = quote_plus(f'site:{source_domain} "{title}"')
+    return f"https://www.google.com/search?q={query}"
+
+
+def is_demo_article(article):
+    return "example.com" in (article.get("url") or "")
 
 
 def normalize_article(article, index, page):
     source_value = article.get("source") or {}
-
-    if isinstance(source_value, dict):
-        source_name = source_value.get("name") or "Unknown source"
-    else:
-        source_name = str(source_value) or "Unknown source"
+    source_name = source_value.get("name") if isinstance(source_value, dict) else str(source_value)
 
     return {
         "id": ((page - 1) * PAGE_SIZE) + index + 1,
         "title": article.get("title") or "Untitled article",
-        "description": article.get("description")
-        or "No description was provided for this article.",
-        "url": article.get("url") or "#",
+        "description": article.get("description") or "No description was provided for this article.",
+        "url": resolve_article_url(article),
+        "isFallback": is_demo_article(article),
         "image": article.get("image") or "",
-        "source": source_name,
+        "source": source_name or "Unknown source",
         "publishedAt": article.get("publishedAt") or "2026-04-06T00:00:00Z",
     }
 
@@ -365,12 +400,26 @@ def clean_html_text(value):
     return re.sub(r"\s+", " ", text).strip()
 
 
+def extract_image_from_html(value):
+    if not value:
+        return ""
+
+    image_match = re.search(r'<img[^>]+src="([^"]+)"', value, flags=re.IGNORECASE)
+    if image_match:
+        return unescape(image_match.group(1)).strip()
+
+    image_match = re.search(r"<img[^>]+src='([^']+)'", value, flags=re.IGNORECASE)
+    if image_match:
+        return unescape(image_match.group(1)).strip()
+
+    return ""
+
+
 def simplify_article(article):
     return {
         "id": article.get("id"),
         "title": article.get("title") or "Untitled article",
-        "description": article.get("description")
-        or "No description was provided for this article.",
+        "description": article.get("description") or "No description was provided for this article.",
         "url": article.get("url") or "#",
         "image": article.get("image") or "",
         "source": article.get("source") or "Unknown source",
@@ -382,23 +431,17 @@ def get_demo_articles(topic, page):
     base_articles = DEMO_ARTICLES.get(topic) or DEMO_ARTICLES["all"]
     expanded_articles = []
 
-    # Create enough demo entries to simulate paginated "load more" behavior
-    # when a real GNews API key is not configured.
-    for page_index in range(1, 5):
-      for article in base_articles:
-        article_copy = dict(article)
-        article_copy["title"] = f'{article["title"]} #{page_index}'
-        article_copy["url"] = f'{article["url"]}?page={page_index}'
-        expanded_articles.append(article_copy)
+    for page_index in range(1, 13):
+        for article in base_articles:
+            article_copy = dict(article)
+            article_copy["title"] = f'{article["title"]} #{page_index}'
+            article_copy["url"] = f'{article["url"]}?page={page_index}'
+            expanded_articles.append(article_copy)
 
     start = (page - 1) * PAGE_SIZE
     end = start + PAGE_SIZE
     page_articles = expanded_articles[start:end]
-
-    normalized = [
-        normalize_article(article, index, page) for index, article in enumerate(page_articles)
-    ]
-    return normalized
+    return [normalize_article(article, index, page) for index, article in enumerate(page_articles)]
 
 
 def fetch_from_newsdata(topic, page, sort_by):
@@ -408,8 +451,6 @@ def fetch_from_newsdata(topic, page, sort_by):
     query = TOPIC_QUERY_MAP[topic]
     page_token = None
 
-    # NewsData.io pagination uses a response token called nextPage instead of
-    # a simple page number, so we walk forward until we reach the requested page.
     for current_page in range(1, page + 1):
         params = {
             "apikey": NEWSDATA_API_KEY,
@@ -433,8 +474,7 @@ def fetch_from_newsdata(topic, page, sort_by):
             return [
                 {
                     "title": article.get("title") or "Untitled article",
-                    "description": article.get("description")
-                    or "No description was provided for this article.",
+                    "description": article.get("description") or "No description was provided for this article.",
                     "url": article.get("link") or "#",
                     "image": article.get("image_url") or "",
                     "source": article.get("source_id") or "NewsData.io",
@@ -469,8 +509,7 @@ def fetch_from_currents(topic, page):
     return [
         {
             "title": article.get("title") or "Untitled article",
-            "description": article.get("description")
-            or "No description was provided for this article.",
+            "description": article.get("description") or "No description was provided for this article.",
             "url": article.get("url") or "#",
             "image": article.get("image") or "",
             "source": article.get("author") or "Currents",
@@ -481,49 +520,54 @@ def fetch_from_currents(topic, page):
 
 
 def fetch_from_google_rss(topic):
-    params = {
-        "q": TOPIC_QUERY_MAP[topic],
-        "hl": "en-US",
-        "gl": "US",
-        "ceid": "US:en",
-    }
-
-    response = requests.get(GOOGLE_RSS_URL, params=params, timeout=10)
-    response.raise_for_status()
-
-    root = ElementTree.fromstring(response.content)
-    items = root.findall("./channel/item")
+    queries = TOPIC_RSS_QUERIES.get(topic) or [TOPIC_QUERY_MAP[topic]]
     articles = []
 
-    for item in items[: PAGE_SIZE * 2]:
-        raw_title = item.findtext("title") or "Untitled article"
-        source_name = "Google News RSS"
-        article_title = raw_title
+    for query in queries:
+        params = {
+            "q": query,
+            "hl": "en-US",
+            "gl": "US",
+            "ceid": "US:en",
+        }
 
-        if " - " in raw_title:
-            article_title, source_name = raw_title.rsplit(" - ", 1)
+        response = requests.get(GOOGLE_RSS_URL, params=params, timeout=10)
+        response.raise_for_status()
 
-        description = clean_html_text(item.findtext("description") or "")
-        published_at = item.findtext("pubDate") or ""
+        root = ElementTree.fromstring(response.content)
+        items = root.findall("./channel/item")
 
-        if published_at:
-            try:
-                published_at = parsedate_to_datetime(published_at).isoformat()
-            except (TypeError, ValueError):
+        for item in items[:RSS_ITEMS_PER_QUERY]:
+            raw_title = item.findtext("title") or "Untitled article"
+            source_name = "Google News RSS"
+            article_title = raw_title
+
+            if " - " in raw_title:
+                article_title, source_name = raw_title.rsplit(" - ", 1)
+
+            raw_description = item.findtext("description") or ""
+            description = clean_html_text(raw_description)
+            image_url = extract_image_from_html(raw_description)
+            published_at = item.findtext("pubDate") or ""
+
+            if published_at:
+                try:
+                    published_at = parsedate_to_datetime(published_at).isoformat()
+                except (TypeError, ValueError):
+                    published_at = "2026-04-06T00:00:00Z"
+            else:
                 published_at = "2026-04-06T00:00:00Z"
-        else:
-            published_at = "2026-04-06T00:00:00Z"
 
-        articles.append(
-            {
-                "title": article_title or "Untitled article",
-                "description": description or "No description was provided for this article.",
-                "url": item.findtext("link") or "#",
-                "image": "",
-                "source": source_name or "Google News RSS",
-                "publishedAt": published_at,
-            }
-        )
+            articles.append(
+                {
+                    "title": article_title or "Untitled article",
+                    "description": description or "No description was provided for this article.",
+                    "url": item.findtext("link") or "#",
+                    "image": image_url,
+                    "source": source_name or "Google News RSS",
+                    "publishedAt": published_at,
+                }
+            )
 
     return articles
 
@@ -571,17 +615,11 @@ def sort_articles(articles, sort_by):
         published_value = published_key(article)
         return published_value.timestamp() if published_value else 0
 
-    sorted_articles = sorted(
-        articles,
-        key=published_timestamp,
-        reverse=True,
-    )
-    return sorted_articles
+    return sorted(articles, key=published_timestamp, reverse=True)
 
 
 def fetch_articles_with_fallback(topic, page, sort_by):
     provider_results = []
-
     providers = [
         lambda: fetch_from_newsdata(topic, page, sort_by),
         lambda: fetch_from_currents(topic, page),
@@ -609,17 +647,55 @@ def fetch_articles_with_fallback(topic, page, sort_by):
 
 def summarize_text_content(text):
     cleaned_text = (text or "").strip()
-    headlines = extract_headlines_from_text(cleaned_text)
-    summary = generate_summary_from_text(cleaned_text)
-    topics = detect_topics_from_text(cleaned_text)
-
     return {
         "page_count": 0,
         "word_count": len(cleaned_text.split()) if cleaned_text else 0,
-        "headlines": headlines,
-        "summary": summary,
-        "topics": topics,
+        "headlines": extract_headlines_from_text(cleaned_text),
+        "summary": generate_summary_from_text(cleaned_text),
+        "topics": detect_topics_from_text(cleaned_text),
     }
+
+
+@app.route("/auth/register", methods=["POST"])
+def auth_register():
+    payload, status = register_user(request.get_json(silent=True) or {}, mail)
+    return jsonify(payload), status
+
+
+@app.route("/auth/login", methods=["POST"])
+def auth_login():
+    payload, status = login_user(request.get_json(silent=True) or {})
+    return jsonify(payload), status
+
+
+@app.route("/auth/logout", methods=["POST"])
+def auth_logout():
+    payload, status = logout_user(get_token_from_request())
+    return jsonify(payload), status
+
+
+@app.route("/auth/forgot-password", methods=["POST"])
+def auth_forgot_password():
+    payload, status = forgot_password(request.get_json(silent=True) or {}, mail)
+    return jsonify(payload), status
+
+
+@app.route("/auth/reset-password", methods=["POST"])
+def auth_reset_password():
+    payload, status = reset_password(request.get_json(silent=True) or {})
+    return jsonify(payload), status
+
+
+@app.route("/auth/me", methods=["GET"])
+def auth_me():
+    payload, status = get_current_user(get_token_from_request())
+    return jsonify(payload), status
+
+
+@app.route("/auth/preferences", methods=["PUT"])
+def auth_preferences():
+    payload, status = update_preferences(get_token_from_request(), request.get_json(silent=True) or {})
+    return jsonify(payload), status
 
 
 @app.route("/news", methods=["GET"])
@@ -635,9 +711,7 @@ def get_news():
         sort_by = "latest"
 
     articles = fetch_articles_with_fallback(topic, page, sort_by)
-    normalized_articles = [
-        normalize_article(article, index, page) for index, article in enumerate(articles)
-    ]
+    normalized_articles = [normalize_article(article, index, page) for index, article in enumerate(articles)]
     return jsonify(normalized_articles)
 
 

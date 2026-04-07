@@ -35,6 +35,34 @@ pip install -r requirements.txt
 python app.py
 ```
 
+### Email configuration
+
+Option 1 - Gmail App Password (recommended for testing):
+
+1. Enable 2FA on your Google account
+2. Go to `myaccount.google.com/apppasswords`
+3. Create an app password for "Mail"
+4. Set environment variables:
+
+```bash
+export MAIL_USERNAME=your@gmail.com
+export MAIL_PASSWORD=your_16_char_app_password
+```
+
+5. Restart Flask
+
+Option 2 - Development mode (no email setup):
+
+If `MAIL_USERNAME` is not set, the OTP will be printed to the Flask terminal instead of sent by email.
+Check your terminal for: `DEV MODE OTP for user@email.com: 482910`
+
+### Auth flow
+
+1. User signs up -> OTP sent to email
+2. User enters 6-digit OTP -> account verified + auto logged in
+3. Token saved in localStorage -> stays logged in across refreshes
+4. Sign out -> token invalidated server-side + cleared from localStorage
+
 ### Frontend
 
 ```bash

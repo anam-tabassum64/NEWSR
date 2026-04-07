@@ -2,6 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { getFallbackNews } from "../data/fallbackNews";
 import { fetchNews } from "../services/api";
 
+function getArticleIdentity(article) {
+  return article.id ?? `${article.url || "article"}-${article.title || "title"}-${article.publishedAt || "time"}`;
+}
+
 export function useNews(topic, sortBy = "latest") {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,12 +27,12 @@ export function useNews(topic, sortBy = "latest") {
             return safeData;
           }
 
-          const existingUrls = new Set(current.map((item) => item.url));
-          const appended = safeData.filter((item) => !existingUrls.has(item.url));
+          const existingIds = new Set(current.map(getArticleIdentity));
+          const appended = safeData.filter((item) => !existingIds.has(getArticleIdentity(item)));
           return [...current, ...appended];
         });
         setPage(pageNumber);
-        setHasMore(safeData.length >= 10);
+        setHasMore(safeData.length >= 12);
       } catch (requestError) {
         const fallbackData = getFallbackNews(topic, pageNumber, sortBy);
         setError("");
@@ -37,11 +41,11 @@ export function useNews(topic, sortBy = "latest") {
             return fallbackData;
           }
 
-          const existingUrls = new Set(current.map((item) => item.url));
-          const appended = fallbackData.filter((item) => !existingUrls.has(item.url));
+          const existingIds = new Set(current.map(getArticleIdentity));
+          const appended = fallbackData.filter((item) => !existingIds.has(getArticleIdentity(item)));
           return [...current, ...appended];
         });
-        setHasMore(fallbackData.length >= 10);
+        setHasMore(fallbackData.length >= 12);
       } finally {
         setLoading(false);
       }

@@ -1,5 +1,9 @@
+# FILE: backend/requirements.txt
 flask
 flask-cors
+flask-mail
 scikit-learn
 requests
 PyMuPDF
+PyJWT
+Werkzeug

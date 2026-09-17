@@ -25,6 +25,30 @@ function Header({
 
   return (
     <>
+      <aside className="nav-rail" aria-label="Primary navigation">
+        <button type="button" className="nav-rail__brand" onClick={() => window.location.assign("/app")} aria-label="NewsPulse home">
+          <span>NP</span>
+        </button>
+        <button type="button" className="nav-rail__item nav-rail__item--active" onClick={() => window.location.assign("/app")} aria-label="Home" title="Home">
+          <span aria-hidden="true">⌂</span>
+        </button>
+        <button type="button" className="nav-rail__item" onClick={() => document.querySelector(".search-bar__input")?.focus()} aria-label="Discover" title="Discover">
+          <span aria-hidden="true">◉</span>
+        </button>
+        <button type="button" className="nav-rail__item" onClick={onOpenBookmarks} aria-label="Saved articles" title="Saved articles">
+          <span aria-hidden="true">▱</span>
+        </button>
+        <button type="button" className="nav-rail__item" onClick={onOpenProfile} aria-label="Profile" title="Profile">
+          <span aria-hidden="true">◌</span>
+        </button>
+        <span className="nav-rail__spacer" />
+        <button type="button" className="nav-rail__item" onClick={() => onShowToast?.("Notifications are coming soon.", "info")} aria-label="Notifications" title="Notifications">
+          <span aria-hidden="true">♧</span>
+        </button>
+        <button type="button" className="nav-rail__item" onClick={() => onShowToast?.("Settings are available from your profile.", "info")} aria-label="Settings" title="Settings">
+          <span aria-hidden="true">⚙</span>
+        </button>
+      </aside>
       <header className="site-header">
         <div className="site-header__brand">
           <img src="/newsr-logo-tight.png?v=2" alt="NEWSR logo" className="site-header__logo" />

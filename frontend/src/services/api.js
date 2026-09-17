@@ -58,6 +58,10 @@ export async function authLogin(email, password) {
   return postJson("/auth/login", { email, password }, "Unable to sign in right now.");
 }
 
+export async function authGoogle(credential) {
+  return postJson("/auth/google", { credential }, "Unable to sign in with Google right now.");
+}
+
 export async function authLogout() {
   return postJson("/auth/logout", {}, "Unable to sign out right now.", getAuthHeader());
 }
@@ -123,6 +127,7 @@ export async function fetchRecommendations(clickedArticle, articles, history) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...getAuthHeader(),
       },
       body: JSON.stringify({
         clicked: clickedArticle,
@@ -137,16 +142,19 @@ export async function fetchRecommendations(clickedArticle, articles, history) {
   }
 }
 
-export async function trackClick(article, topic) {
+export async function trackClick(article, topic, durationSeconds = 0, action = "click") {
   try {
     const response = await fetch(`${BASE_URL}/track_click`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        ...getAuthHeader(),
       },
       body: JSON.stringify({
         article,
         topic,
+        duration_seconds: durationSeconds,
+        action,
       }),
     });
 
@@ -154,6 +162,52 @@ export async function trackClick(article, topic) {
   } catch (error) {
     return { history: [] };
   }
+}
+
+export async function trackInteraction(action, topic, query = "") {
+  try {
+    const response = await fetch(`${BASE_URL}/track_interaction`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getAuthHeader() },
+      body: JSON.stringify({ action, topic, query }),
+    });
+    return await handleResponse(response, "Failed to track reading preference.");
+  } catch (error) {
+    return { tracked: false };
+  }
+}
+
+export async function trackReading(article, topic, durationSeconds, keepalive = false) {
+  try {
+    const response = await fetch(`${BASE_URL}/track_reading`, {
+      method: "POST",
+      keepalive,
+      headers: { "Content-Type": "application/json", ...getAuthHeader() },
+      body: JSON.stringify({ article, topic, duration_seconds: durationSeconds }),
+    });
+    return await handleResponse(response, "Failed to track reading time.");
+  } catch (error) {
+    return { tracked: false };
+  }
+}
+
+export async function fetchAnalytics() {
+  const response = await fetch(`${BASE_URL}/analytics`, { headers: getAuthHeader() });
+  return handleResponse(response, "Unable to load your analytics.");
+}
+
+export async function fetchBriefing() {
+  const response = await fetch(`${BASE_URL}/briefing`, { headers: getAuthHeader() });
+  return handleResponse(response, "Unable to load your daily briefing.");
+}
+
+export async function fetchArticleTools(article) {
+  const response = await fetch(`${BASE_URL}/article-tools`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ article }),
+  });
+  return handleResponse(response, "Unable to analyze this article.");
 }
 
 export async function fetchTrending() {

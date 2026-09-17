@@ -2,6 +2,7 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
   authForgotPassword,
+  authGoogle,
   authGetMe,
   authLogin,
   authLogout,
@@ -87,6 +88,15 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  async function googleLogin(credential) {
+    setAuthError(null);
+    const data = await authGoogle(credential);
+    localStorage.setItem(TOKEN_KEY, data.token);
+    setToken(data.token);
+    setUser(normalizeUser(data.user));
+    return data;
+  }
+
   async function logout() {
     try {
       await authLogout();
@@ -134,6 +144,7 @@ export function AuthProvider({ children }) {
       authError,
       login,
       signup,
+      googleLogin,
       logout,
       forgotPassword,
       resetPassword,

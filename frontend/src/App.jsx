@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import BookmarkDrawer from "./components/BookmarkDrawer";
+import AnalyticsPanel from "./components/AnalyticsPanel";
+import ArticleTools from "./components/ArticleTools";
+import DailyBriefing from "./components/DailyBriefing";
 import ENewspaper from "./components/ENewspaper";
 import FeaturedArticle from "./components/FeaturedArticle";
 import Header from "./components/Header";
@@ -18,7 +21,8 @@ import { useNews } from "./hooks/useNews";
 import { useRecommendations } from "./hooks/useRecommendations";
 import ProfilePage from "./pages/ProfilePage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
-import { fetchTrending, trackClick } from "./services/api";
+import LandingPage from "./pages/LandingPage";
+import { fetchTrending, trackClick, trackInteraction, trackReading } from "./services/api";
 
 const TOPICS = [
   "All",
@@ -59,13 +63,15 @@ function mergeByUrl(primary = [], secondary = []) {
 
 function AppContent() {
   const { user, loading: authLoading, updatePreferences } = useAuth();
+  const [showIntro, setShowIntro] = useState(() => sessionStorage.getItem("newspulse_intro_seen") !== "true");
   const [topic, setTopic] = useState("ai");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSortBy, setActiveSortBy] = useState("latest");
   const [readingHistory, setReadingHistory] = useState([]);
-  const [bookmarkDrawerOpen, setBookmarkDrawerOpen] = useState(false);
+  const [bookmarkDrawerOpen, setBookmarkDrawerOpen] = useState(() => window.location.hash === "#bookmarks");
   const [trending, setTrending] = useState([]);
-  const [pathname, setPathname] = useState(window.location.pathname);
+  const [articleToolsTarget, setArticleToolsTarget] = useState(null);
+  const [pathname, setPathname] = useState(() => `${window.location.pathname}${window.location.hash}`);
   const [toast, setToast] = useState({
     message: "",
     type: "info",
@@ -86,6 +92,20 @@ function AppContent() {
   const trendingIntervalRef = useRef(null);
   const hydratedUserRef = useRef("");
   const syncTimeoutRef = useRef(null);
+  const readingSessionRef = useRef(null);
+
+  useEffect(() => {
+    if (authLoading || !showIntro) {
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      sessionStorage.setItem("newspulse_intro_seen", "true");
+      setShowIntro(false);
+    }, 1500);
+
+    return () => window.clearTimeout(timer);
+  }, [authLoading, showIntro]);
 
   function showToast(message, type = "info") {
     setToast({
@@ -99,6 +119,25 @@ function AppContent() {
     window.history.pushState({}, "", nextPath);
     setPathname(nextPath);
   }
+
+  useEffect(() => {
+    const targetId = window.location.hash.slice(1);
+
+    if (!targetId) {
+      return;
+    }
+
+    if (targetId === "bookmarks") {
+      setBookmarkDrawerOpen(true);
+      return;
+    }
+
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
 
   async function refreshTrending() {
     try {
@@ -114,7 +153,7 @@ function AppContent() {
     trendingIntervalRef.current = window.setInterval(refreshTrending, 60000);
 
     function handlePopState() {
-      setPathname(window.location.pathname);
+      setPathname(`${window.location.pathname}${window.location.hash}`);
     }
 
     window.addEventListener("popstate", handlePopState);
@@ -124,6 +163,27 @@ function AppContent() {
         window.clearInterval(trendingIntervalRef.current);
       }
       window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  useEffect(() => {
+    async function finishReadingSession(force = false) {
+      const session = readingSessionRef.current;
+      if (!session || (!force && document.visibilityState !== "visible")) {
+        return;
+      }
+      readingSessionRef.current = null;
+      const durationSeconds = Math.max(0, Math.round((Date.now() - session.startedAt) / 1000));
+      await trackReading(session.article, session.topic, durationSeconds, force);
+    }
+
+    const handleVisibilityChange = () => finishReadingSession(false);
+    const handlePageHide = () => finishReadingSession(true);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("pagehide", handlePageHide);
     };
   }, []);
 
@@ -193,6 +253,18 @@ function AppContent() {
     setTopic(nextTopic);
     setSearchQuery("");
     clearRecommendations();
+    trackInteraction("category_view", nextTopic).catch(() => {});
+  }
+
+  function handleSearch(nextQuery) {
+    setSearchQuery(nextQuery);
+    if (nextQuery) {
+      trackInteraction("search", topic, nextQuery).catch(() => {});
+    }
+  }
+
+  function handleArticleSkip() {
+    trackInteraction("skip", topic).catch(() => {});
   }
 
   function handleSortChange(value) {
@@ -212,6 +284,8 @@ function AppContent() {
       showToast("Opening the publisher site because this card is demo content.", "info");
     }
 
+    readingSessionRef.current = { article, topic, startedAt: Date.now() };
+
     try {
       await trackClick(article, topic);
     } catch (requestError) {
@@ -227,6 +301,7 @@ function AppContent() {
 
   function handleBookmark(article) {
     const added = toggleBookmark(article);
+    trackClick(article, topic, 0, "bookmark").catch(() => {});
     showToast(added ? "Saved!" : "Removed", added ? "success" : "info");
   }
 
@@ -234,18 +309,30 @@ function AppContent() {
     fetchPage(page + 1);
   }
 
-  if (authLoading) {
+  if (authLoading || showIntro) {
     return <LoadingPage />;
   }
 
-  if (pathname === "/reset-password") {
+  const routePath = pathname.split("#")[0].split("?")[0];
+
+  if (routePath === "/reset-password") {
     return <ResetPasswordPage />;
   }
+
+  if (routePath === "/") {
+    return <LandingPage onExplore={() => navigate("/app")} onFeatureOpen={navigate} />;
+  }
+
+  const today = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(new Date());
 
   return (
     <div className="app-shell">
       <Header
-        onSearch={setSearchQuery}
+        onSearch={handleSearch}
         bookmarkCount={bookmarks.length}
         onOpenBookmarks={() => setBookmarkDrawerOpen(true)}
         initialQuery={searchQuery}
@@ -253,9 +340,10 @@ function AppContent() {
         onShowToast={showToast}
       />
 
-      {pathname === "/profile" ? (
+      {routePath === "/profile" ? (
         <main className="stacked-sections profile-shell">
           <ProfilePage onBackHome={() => navigate("/")} />
+          <div id="analytics"><AnalyticsPanel /></div>
         </main>
       ) : (
         <>
@@ -267,10 +355,23 @@ function AppContent() {
             onSortChange={handleSortChange}
           />
 
-          <ReadingHistory history={readingHistory} onOpenArticle={openArticleWindow} />
+          <section className="feed-intro" aria-labelledby="feed-title">
+            <div>
+              <p className="feed-intro__eyebrow"><span aria-hidden="true" /> Your daily signal</p>
+              <h1 id="feed-title">NEWS, WITH<br />MORE MEANING.</h1>
+              <p className="feed-intro__copy">A focused view of the stories shaping your world, curated around what you follow.</p>
+            </div>
+            <aside className="feed-intro__date"><span>Today</span><strong>{today}</strong><em>Live updates</em></aside>
+          </section>
+
+          <section id="history"><ReadingHistory history={readingHistory} onOpenArticle={openArticleWindow} /></section>
+          <DailyBriefing />
+          {articleToolsTarget ? (
+            <ArticleTools article={articleToolsTarget} onClose={() => setArticleToolsTarget(null)} />
+          ) : null}
 
           <main className="main-layout">
-            <section className="feed">
+            <section className="feed" id="feed">
               {error ? <p className="error-banner">{error}</p> : null}
 
               {featuredArticle ? (
@@ -286,6 +387,8 @@ function AppContent() {
                 articles={remainingArticles}
                 loading={loading}
                 onArticleClick={handleArticleClick}
+                onArticleTools={setArticleToolsTarget}
+                onSkip={handleArticleSkip}
                 searchQuery={searchQuery}
                 onBookmark={handleBookmark}
                 isBookmarked={isBookmarked}
@@ -294,7 +397,7 @@ function AppContent() {
               />
             </section>
 
-            <aside className="sidebar">
+            <aside className="sidebar" id="trending">
               <TrendingBar trending={trending} />
               <Recommendations
                 recommendations={recommendations}
@@ -305,7 +408,7 @@ function AppContent() {
             </aside>
           </main>
 
-          <div className="stacked-sections">
+          <div className="stacked-sections" id="summarizer">
             <ENewspaper />
             <PDFSummarizer />
           </div>

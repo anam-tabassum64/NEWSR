@@ -7,3 +7,6 @@ requests
 PyMuPDF
 PyJWT
 Werkzeug
+pymongo
+pytest
+python-dotenv

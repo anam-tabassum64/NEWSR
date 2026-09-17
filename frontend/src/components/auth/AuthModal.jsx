@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import GoogleSignInButton from "./GoogleSignInButton";
 
 function getPasswordStrength(password) {
   const hasUpper = /[A-Z]/.test(password);
@@ -23,7 +24,7 @@ function getPasswordStrength(password) {
 }
 
 function AuthModal({ isOpen, onClose, initialMode = "login", initialEmail = "" }) {
-  const { login, signup, forgotPassword } = useAuth();
+  const { login, signup, googleLogin, forgotPassword } = useAuth();
   const [mode, setMode] = useState(initialMode);
   const [loading, setLoading] = useState(false);
   const [inlineError, setInlineError] = useState("");
@@ -94,6 +95,19 @@ function AuthModal({ isOpen, onClose, initialMode = "login", initialEmail = "" }
     }
   }
 
+  async function handleGoogleCredential(credential) {
+    setLoading(true);
+    setInlineError("");
+    try {
+      await googleLogin(credential);
+      onClose();
+    } catch (error) {
+      setInlineError(error.message || "Unable to sign in with Google.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function handleSignupSubmit(event) {
     event.preventDefault();
     setInlineError("");
@@ -151,6 +165,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login", initialEmail = "" }
               <input
                 className="auth-input"
                 type="email"
+                placeholder="Email"
                 autoComplete="email"
                 value={loginForm.email}
                 onChange={(event) => setLoginForm((current) => ({ ...current, email: event.target.value }))}
@@ -163,6 +178,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login", initialEmail = "" }
                 <input
                   className="auth-input"
                   type={showPassword ? "text" : "password"}
+                  placeholder="Password"
                   autoComplete="current-password"
                   value={loginForm.password}
                   onChange={(event) => setLoginForm((current) => ({ ...current, password: event.target.value }))}
@@ -188,13 +204,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login", initialEmail = "" }
             </button>
 
             <div className="auth-divider">or</div>
-            <button
-              type="button"
-              className="auth-btn-secondary"
-              onClick={() => setInfoMessage("Google auth coming soon")}
-            >
-              Continue with Google
-            </button>
+            <GoogleSignInButton onCredential={handleGoogleCredential} onError={setInlineError} disabled={loading} />
 
             {infoMessage ? <div className="auth-hint">{infoMessage}</div> : null}
 
@@ -216,6 +226,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login", initialEmail = "" }
               <input
                 className="auth-input"
                 type="text"
+                placeholder="Full name"
                 value={signupForm.name}
                 onChange={(event) => setSignupForm((current) => ({ ...current, name: event.target.value }))}
               />
@@ -226,6 +237,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login", initialEmail = "" }
               <input
                 className="auth-input"
                 type="email"
+                placeholder="Email"
                 autoComplete="email"
                 value={signupForm.email}
                 onChange={(event) => setSignupForm((current) => ({ ...current, email: event.target.value }))}
@@ -238,6 +250,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login", initialEmail = "" }
                 <input
                   className="auth-input"
                   type={showPassword ? "text" : "password"}
+                  placeholder="Password"
                   autoComplete="new-password"
                   value={signupForm.password}
                   onChange={(event) => setSignupForm((current) => ({ ...current, password: event.target.value }))}
@@ -281,6 +294,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login", initialEmail = "" }
                     : ""
                 }`}
                 type="password"
+                placeholder="Confirm password"
                 autoComplete="new-password"
                 value={signupForm.confirmPassword}
                 onChange={(event) =>
@@ -325,6 +339,7 @@ function AuthModal({ isOpen, onClose, initialMode = "login", initialEmail = "" }
               <input
                 className="auth-input"
                 type="email"
+                placeholder="Email"
                 autoComplete="email"
                 value={forgotEmail}
                 onChange={(event) => setForgotEmail(event.target.value)}

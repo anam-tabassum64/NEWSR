@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { formatDate } from "../utils/formatDate";
 import { highlightText } from "../utils/highlightText";
 
@@ -7,20 +7,48 @@ function ArticleCard({
   onBookmark,
   isBookmarked,
   onArticleClick,
+  onArticleTools,
+  onSkip,
   searchQuery,
 }) {
   const bookmarked = isBookmarked(article.url);
   const titleHtml = highlightText(article.title, searchQuery);
   const [imageVisible, setImageVisible] = useState(Boolean(article.image));
+  const cardRef = useRef(null);
+  const hasBeenSeenRef = useRef(false);
+  const hasOpenedRef = useRef(false);
+  const skipSentRef = useRef(false);
 
   useEffect(() => {
     setImageVisible(Boolean(article.image));
   }, [article.image]);
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          hasBeenSeenRef.current = true;
+        } else if (hasBeenSeenRef.current && !hasOpenedRef.current && !skipSentRef.current) {
+          skipSentRef.current = true;
+          onSkip?.(article);
+        }
+      },
+      { threshold: 0.35 }
+    );
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+    return () => observer.disconnect();
+  }, [article, onSkip]);
+
   return (
     <article
+      ref={cardRef}
       className="card article-card"
-      onClick={() => onArticleClick(article)}
+      onClick={() => {
+        hasOpenedRef.current = true;
+        onArticleClick(article);
+      }}
       role="button"
       tabIndex={0}
       onKeyDown={(event) => {
@@ -51,6 +79,7 @@ function ArticleCard({
         <div className="article-card__meta">
           <span className="article-card__source">{article.source}</span>
           <span>{formatDate(article.publishedAt)}</span>
+          {article.covered_by?.length > 1 ? <span>{article.covered_by.length} sources</span> : null}
         </div>
 
         <h3
@@ -61,6 +90,16 @@ function ArticleCard({
 
         <div className="article-card__footer">
           <span className="article-card__readmore">Open story</span>
+          <button
+            type="button"
+            className="article-tools-button"
+            onClick={(event) => {
+              event.stopPropagation();
+              onArticleTools(article);
+            }}
+          >
+            Tools
+          </button>
           <button
             type="button"
             className="bookmark-toggle"

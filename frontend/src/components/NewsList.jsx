@@ -18,6 +18,8 @@ function NewsList({
   articles,
   loading,
   onArticleClick,
+  onArticleTools,
+  onSkip,
   searchQuery,
   onBookmark,
   isBookmarked,
@@ -42,6 +44,8 @@ function NewsList({
                 key={getArticleKey(article, index)}
                 article={article}
                 onArticleClick={onArticleClick}
+                onArticleTools={onArticleTools}
+                onSkip={onSkip}
                 searchQuery={searchQuery}
                 onBookmark={onBookmark}
                 isBookmarked={isBookmarked}

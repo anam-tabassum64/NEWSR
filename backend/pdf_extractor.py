@@ -141,3 +141,22 @@ def detect_topics_from_text(text):
 
     matches.sort(key=lambda item: item[1], reverse=True)
     return [topic for topic, _ in matches]
+
+
+def generate_article_tools(title, description, content=""):
+    text = " ".join(value.strip() for value in (title, description, content) if value and value.strip())
+    sentences = [sentence.strip() for sentence in re.split(r"(?<=[.!?])\s+", text) if sentence.strip()]
+    facts = [sentence for sentence in sentences if re.search(r"\d|\b(is|are|will|has|have|announced|reported)\b", sentence, re.I)][:4]
+    summary = generate_summary_from_text(text, max_words=90)
+    topics = detect_topics_from_text(text)
+    simple = re.sub(r"\b(utilize|approximately|demonstrate|commence)\b", lambda match: {
+        "utilize": "use", "approximately": "about", "demonstrate": "show", "commence": "start"
+    }[match.group(1).lower()], summary, flags=re.I)
+    focus = ", ".join(topics[:2]) if topics else "this topic"
+    return {
+        "summary": summary or description or title,
+        "key_facts": facts or [description or title],
+        "explain_simply": simple or description or title,
+        "why_it_matters": f"This matters because it may affect how people understand or respond to {focus}.",
+        "topics": topics,
+    }

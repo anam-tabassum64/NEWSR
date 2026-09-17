@@ -88,7 +88,7 @@ function Recommendations({ recommendations, loading, clickHistory, onArticleOpen
                 </div>
                 <h3>{article.title}</h3>
                 <p className="recommendation-card__time">{formatDate(article.publishedAt)}</p>
-                <div className="because-box">Because you read: {article.because_of}</div>
+                <div className="because-box">Why this article: {article.why_this || article.because_of}</div>
               </div>
             </button>
           ))}

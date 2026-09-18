@@ -1,5 +1,4 @@
-````markdown
-# 📰 Newsr – Personalized News Aggregator
+# 📰 NewsPulse – Personalized News Intelligence
 
 [![React.js](https://img.shields.io/badge/React.js-18-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
 [![JavaScript](https://img.shields.io/badge/JavaScript-ES6%2B-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
@@ -11,32 +10,29 @@
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-CI%2FCD-2088FF?style=for-the-badge&logo=github-actions&logoColor=white)](https://github.com/features/actions)
 
-> 📰 **Personalized news. Smarter discovery. One unified platform.**
+> 📰 Personalized news. Smarter discovery. One unified platform.
 
 ---
 
 ## 📌 Overview
 
-**Newsr** is a full-stack personalized news intelligence platform designed to bring news from multiple sources into one unified application.
+NewsPulse is a full-stack personalized news intelligence platform that brings articles from multiple sources into one unified experience. It combines a React frontend, Flask backend, MongoDB data layer, and recommendation engine to help users discover relevant content faster and build a more personalized reading habit.
 
-The platform combines a **React.js frontend**, **Flask/Python backend**, **MongoDB database**, **REST APIs**, and **machine learning** to provide personalized news discovery and intelligent content management.
+The platform aggregates content from NewsData, Currents, and Google News RSS, normalizes it into a common article model, identifies related coverage, tracks user behavior, and recommends stories based on interest profiles and reading activity.
 
-Newsr integrates multiple **News APIs and RSS feeds**, processes incoming content, and uses user interests and reading behavior to improve article discovery.
-
-The platform provides features such as:
+### Highlights
 
 - 📰 Multi-source news aggregation
 - 🤖 Personalized recommendations
 - 🔐 JWT authentication
-- 🔖 Bookmarking
-- 📖 Reading history
-- ⚙️ Personalized preferences
-- 📊 Analytics
-- 📝 News summarization
-- 📅 Daily briefings
-- 📄 PDF/text summarization
-- 🐳 Docker-based containerization
-- ⚙️ Automated testing with GitHub Actions
+- 🔖 Bookmarking and saved articles
+- 📖 Reading history tracking
+- ⚙️ User preferences and analytics
+- 📝 Summaries for text and PDF content
+- 📅 Daily briefing generation
+- 🔄 Fallback demo content when providers fail
+- 🐳 Dockerized deployment
+- ⚙️ CI/CD with GitHub Actions
 
 ---
 
@@ -44,19 +40,19 @@ The platform provides features such as:
 
 | 🚀 Feature | 🔹 Description |
 |---|---|
-| 📰 **Multi-Source News** | Aggregates news from multiple News APIs and RSS feeds |
-| 🤖 **Personalized Recommendations** | Recommends articles using content similarity, interests, reading behavior, trends, and recency |
-| 🔐 **JWT Authentication** | Provides secure authentication and protected API access |
-| 🔖 **Bookmarking** | Allows users to save articles for later |
-| 📖 **Reading History** | Tracks previously read articles |
-| ⚙️ **User Preferences** | Personalizes content based on user interests |
-| 📊 **Analytics** | Provides insights based on user interaction and reading behavior |
-| 📝 **News Summarization** | Generates concise summaries from supported content |
-| 📅 **Daily Briefings** | Provides personalized daily news briefings |
-| 📄 **PDF/Text Summarization** | Supports summarization of PDF and text content |
-| 🔄 **Fallback Handling** | Maintains content availability when external sources fail |
-| 🐳 **Docker Support** | Containerized application using Docker Compose |
-| ⚙️ **GitHub Actions** | Automated testing and CI workflow |
+| 📰 **Multi-source news** | Aggregates articles from multiple providers and RSS sources |
+| 🤖 **Personalized recommendations** | Uses TF-IDF similarity, interests, behavior, recency, and trending signals |
+| 🔐 **JWT authentication** | Secures user-specific routes and session flows |
+| 🔖 **Bookmarks** | Allows users to save articles for later reading |
+| 📖 **Reading history** | Tracks clicks, reads, and engagement behavior |
+| ⚙️ **User preferences** | Captures topic and language interests for personalization |
+| 📊 **Analytics** | Measures user interaction, behavior, and engagement |
+| 📝 **News summarization** | Produces concise summaries from supported content |
+| 📅 **Daily briefings** | Combines relevant stories into a personalized reporting view |
+| 📄 **PDF/text summarization** | Supports extraction and summarization for uploaded documents |
+| 🔄 **Fallback handling** | Keeps the app functional with demo content during provider outages |
+| 🐳 **Docker support** | Easy setup and isolated deployment with Docker Compose |
+| ⚙️ **GitHub Actions** | Automated validation for tests and build workflows |
 
 ---
 
@@ -66,24 +62,26 @@ The platform provides features such as:
                          ┌──────────────────────────┐
                          │       NEWS SOURCES       │
                          │                          │
-                         │   News APIs + RSS Feeds  │
+                         │ NewsData + Currents +    │
+                         │    Google News RSS       │
                          └────────────┬─────────────┘
                                       │
                                       ▼
                          ┌──────────────────────────┐
                          │      FLASK BACKEND       │
                          │                          │
-                         │      REST APIs           │
-                         │      Authentication      │
-                         │      Data Processing     │
+                         │ REST APIs                │
+                         │ Authentication           │
+                         │ Story grouping           │
+                         │ Content normalization    │
                          └────────────┬─────────────┘
                                       │
               ┌───────────────────────┼───────────────────────┐
               │                       │                       │
               ▼                       ▼                       ▼
      ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-     │     MongoDB     │    │ Recommendation  │    │ Summarization   │
-     │    Database     │    │     Engine      │    │     Engine      │
+     │   MongoDB       │    │ Recommendation  │    │ Summarization   │
+     │   Database      │    │     Engine      │    │     Engine      │
      └─────────────────┘    └─────────────────┘    └─────────────────┘
               │                       │                       │
               └───────────────────────┼───────────────────────┘
@@ -96,7 +94,7 @@ The platform provides features such as:
                          │ Bookmarks • Analytics    │
                          │ Preferences • Profile   │
                          └──────────────────────────┘
-````
+```
 
 ---
 
@@ -104,231 +102,132 @@ The platform provides features such as:
 
 ## 🎨 1. Frontend Module
 
-The frontend is developed using **React.js and JavaScript**.
-
-It provides the user-facing interface for interacting with Newsr.
+The frontend is built with React and Vite and provides the user-facing experience for discovery, personalization, and account management.
 
 ### Responsibilities
 
-* 📰 Display personalized news
-* 🔍 Search and discover articles
-* 📑 Display article details
-* 🔖 Manage bookmarks
-* 📖 Display reading history
-* ⚙️ Manage user preferences
-* 📊 Display analytics
-* 📝 Access summaries
-* 📅 Access daily briefings
-* 🔐 Handle authentication state
-* 🔄 Communicate with backend REST APIs
-
-### Frontend Flow
-
-```text
-User
- │
- ▼
-React.js Frontend
- │
- ├── Home / News Feed
- ├── Search
- ├── Article Details
- ├── Bookmarks
- ├── Reading History
- ├── Preferences
- ├── Analytics
- └── Summaries
- │
- ▼
-REST APIs
-```
+- 📰 Display personalized news feeds
+- 🔍 Search and topic browsing
+- 📑 View article details and recommendations
+- 🔖 Manage bookmarks and saved stories
+- 📖 View reading history
+- ⚙️ Update user preferences
+- 📊 Access analytics dashboards
+- 📝 Open summaries and briefing views
+- 🔐 Handle authentication state
+- 🔄 Communicate with backend APIs
 
 ---
 
-# ⚙️ 2. Backend Module
+## ⚙️ 2. Backend Module
 
-The backend is developed using **Python and Flask**.
-
-It acts as the central application layer between the frontend, database, recommendation engine, summarization functionality, and external news sources.
-
-Newsr contains **22 REST API endpoints**.
+The backend is built with Python and Flask and acts as the central application layer for the platform.
 
 ### Responsibilities
 
-* 🔐 Authentication
-* 👤 User management
-* 📰 News retrieval
-* 🔌 External API integration
-* 📡 RSS feed processing
-* 🔖 Bookmark management
-* 📖 Reading history
-* ⚙️ User preferences
-* 🤖 Recommendation processing
-* 📝 Summarization
-* 📅 Daily briefing generation
-* 📊 Analytics
+- 🔐 Authentication and session handling
+- 👤 User registration and account management
+- 📰 News retrieval and normalization
+- 🔌 External provider integration
+- 📡 RSS feed processing
+- 🔖 Bookmark management
+- 📖 Reading history tracking
+- ⚙️ User preference logic
+- 🤖 Recommendation scoring
+- 📝 Summarization and briefing generation
+- 📊 Analytics and interaction processing
 
-### Backend Flow
+---
+
+## 🗄️ 3. Database Module
+
+NewsPulse uses MongoDB with PyMongo, with an in-memory fallback for local development when MongoDB is not configured.
+
+### Collections
+
+- `users`
+- `preferences`
+- `interactions`
+- `articles`
+- `bookmarks`
+- `reading_history`
+- `story_groups`
+- `recommendations`
+
+### Storage responsibilities
+
+- 👤 User identity and password hash
+- 📰 Article storage and deduplication
+- 🔖 Saved articles for authenticated users
+- 📖 Reading history and interaction signals
+- ⚙️ User topic preferences
+- 📊 Analytics and recommendation snapshots
+
+---
+
+## 🔌 4. News Integration Module
+
+The application integrates content from multiple external data sources and normalizes them into a single internal article structure.
+
+### Sources
+
+- NewsData
+- Currents
+- Google News RSS
+- Demo fallback content
+
+### Integration flow
 
 ```text
-React Frontend
-       │
-       │ HTTP Requests
-       ▼
-┌─────────────────────┐
-│    Flask Backend    │
-├─────────────────────┤
-│ Authentication      │
-│ News APIs           │
-│ RSS Integration     │
-│ Recommendations     │
-│ Summarization       │
-│ Bookmarks           │
-│ Reading History     │
-│ Preferences         │
-│ Analytics           │
-└──────────┬──────────┘
-           │
-           ▼
+News APIs / RSS feeds
+         │
+         ▼
+   Flask Backend
+         │
+         ├── Fetch
+         ├── Normalize
+         ├── Validate
+         ├── Deduplicate
+         └── Sort / Cache
+         │
+         ▼
        MongoDB
-```
-
----
-
-# 🗄️ 3. Database Module
-
-Newsr uses **MongoDB** for persistent data storage and **PyMongo** as the Python database driver.
-
-The application uses **8 MongoDB collections**.
-
-### Database Responsibilities
-
-* 👤 User information
-* 📰 News/article data
-* 🔖 Bookmarks
-* 📖 Reading history
-* ⚙️ User preferences
-* 📊 Analytics
-* 🤖 Recommendation-related data
-* 💾 Persistent application data
-
-### Database Flow
-
-```text
-                    MongoDB
-                       │
-       ┌───────────────┼───────────────┐
-       │               │               │
-       ▼               ▼               ▼
-    Users           Articles       Bookmarks
-       │               │               │
-       ▼               ▼               ▼
- Preferences      History        Analytics
-       │
-       ▼
- Recommendations
-```
-
----
-
-# 🔌 4. News Integration Module
-
-Newsr integrates news content from **multiple News APIs and RSS feeds**.
-
-The backend collects, processes, and normalizes incoming content before making it available to the frontend.
-
-### Integration Flow
-
-```text
-┌──────────────────┐
-│    News APIs     │
-└────────┬─────────┘
-         │
-         │
-┌────────▼─────────┐
-│    RSS Feeds     │
-└────────┬─────────┘
-         │
-         ▼
-┌──────────────────┐
-│  Flask Backend   │
-├──────────────────┤
-│ Fetch            │
-│ Process          │
-│ Normalize        │
-│ Filter           │
-└────────┬─────────┘
-         │
-         ▼
-      MongoDB
          │
          ▼
    React Frontend
 ```
 
-### Integration Capabilities
+---
 
-* 🔗 Multiple external news sources
-* 📡 RSS feed support
-* 🔄 Fallback data handling
-* 🧹 Content processing
-* 📦 Structured article data
-* 🔌 REST-based communication
+## 🤖 5. Recommendation Engine
+
+The hybrid recommendation engine combines multiple signals to personalize article discovery.
+
+### Signals used
+
+- 🧠 TF-IDF content similarity
+- 👤 User interests
+- 📖 Reading behavior
+- 🔥 Trending content
+- ⏱️ Content recency
+
+### Recommendation weights
+
+- Content: `0.45`
+- Interest: `0.25`
+- Behavior: `0.15`
+- Trending: `0.10`
+- Recency: `0.05`
+
+Recommendation responses include `matchScore` and `because_of` for explainability.
 
 ---
 
-# 🤖 5. Recommendation Engine
+## 🔐 6. Authentication Module
 
-Newsr uses a **hybrid recommendation engine** to personalize article discovery.
+JWT authentication protects user-specific APIs and supports secure access to bookmarks, history, preferences, and analytics.
 
-Instead of relying on a single signal, the system combines multiple factors.
-
-### Recommendation Signals
-
-* 🧠 TF-IDF content similarity
-* 👤 User interests
-* 📖 Reading behavior
-* 🔥 Trending content
-* ⏱️ Content recency
-
-### Recommendation Pipeline
-
-```text
-                 News Articles
-                      │
-                      ▼
-              Content Processing
-                      │
-                      ▼
-              TF-IDF Vectorization
-                      │
-                      ▼
-              Content Similarity
-                      │
-       ┌──────────────┼──────────────┐
-       │              │              │
-       ▼              ▼              ▼
-User Interests   Reading History   Trending Content
-       │              │              │
-       └──────────────┼──────────────┘
-                      │
-                      ▼
-                Recency Signal
-                      │
-                      ▼
-              Hybrid Recommendation
-                      │
-                      ▼
-             Personalized Articles
-```
-
----
-
-# 🔐 6. Authentication Module
-
-Newsr implements **JWT (JSON Web Token) authentication** for secure user-specific functionality.
-
-### Authentication Flow
+### Authentication flow
 
 ```text
 User
@@ -337,34 +236,31 @@ User
 Login / Registration
  │
  ▼
-Flask Authentication API
+Flask Auth Layer
  │
  ▼
 Credential Validation
  │
  ▼
-JWT Token Generated
- │
- ▼
-Authenticated Session
+JWT Token Issued
  │
  ▼
 Protected API Requests
 ```
 
-JWT authentication supports functionality such as:
+JWT protects features such as:
 
-* 🔖 Bookmarks
-* 📖 Reading history
-* ⚙️ Preferences
-* 🤖 Personalized recommendations
-* 📊 Analytics
+- 🔖 Bookmarks
+- 📖 Reading history
+- ⚙️ Preferences
+- 🤖 Personalized recommendations
+- 📊 Analytics
 
 ---
 
-# 🔖 7. Bookmark Module
+## 🔖 7. Bookmark Module
 
-The bookmark system allows users to save articles for future reading.
+Users can save articles and revisit them later from a protected personal space.
 
 ### Workflow
 
@@ -390,20 +286,11 @@ Saved Bookmark
 Bookmark Page
 ```
 
-### Capabilities
-
-* Save articles
-* Retrieve saved articles
-* Manage bookmarked content
-* Associate bookmarks with authenticated users
-
 ---
 
-# 📖 8. Reading History Module
+## 📖 8. Reading History Module
 
-Newsr tracks user reading activity.
-
-Reading history can also contribute to personalized content discovery.
+Reading history tracks how users engage with content and contributes to personalization.
 
 ### Workflow
 
@@ -428,11 +315,9 @@ Recommendation Engine
 
 ---
 
-# ⚙️ 9. User Preferences Module
+## ⚙️ 9. User Preferences Module
 
-Users can configure their interests and preferences.
-
-These preferences become one of the signals used by the recommendation engine.
+Users can configure interests that influence article recommendations and briefing generation.
 
 ```text
 User
@@ -455,74 +340,36 @@ Personalized News Feed
 
 ---
 
-# 📊 10. Analytics Module
+## 📊 10. Analytics Module
 
-Newsr provides analytics based on user interaction with the platform.
+NewsPulse tracks behavior and generates engagement insights based on user actions.
 
-Analytics can be used to understand:
+### Analytics can measure
 
-* 📖 Reading behavior
-* 📰 Article interaction
-* 👤 User preferences
-* 🔎 News discovery
-* 📈 Engagement patterns
-
-### Analytics Flow
-
-```text
-User Activity
-      │
-      ▼
-Activity Tracking
-      │
-      ▼
-MongoDB
-      │
-      ▼
-Analytics Processing
-      │
-      ▼
-Analytics Dashboard
-```
+- 📖 Reading behavior
+- 📰 Article interactions
+- 👤 Interest preferences
+- 🔎 Discovery patterns
+- 📈 Content engagement
 
 ---
 
-# 📝 11. Summarization Module
+## 📝 11. Summarization Module
 
-Newsr provides summarization functionality to make lengthy content easier to consume.
+The app supports summarization of longer content to make reading faster and clearer.
 
-The platform supports:
+### Supported content
 
-* 📰 News summarization
-* 📄 PDF summarization
-* 📝 Text summarization
-* 📅 Daily briefings
-
-### Summarization Flow
-
-```text
-Article / Text / PDF
-         │
-         ▼
-   Content Extraction
-         │
-         ▼
-    Summarization
-         │
-         ▼
-   Concise Output
-         │
-         ▼
-       User
-```
+- 📰 News articles
+- 📄 PDF documents
+- 📝 Text snippets
+- 📅 Daily briefing summaries
 
 ---
 
-# 📅 12. Daily Briefing Module
+## 📅 12. Daily Briefing Module
 
-Newsr provides a daily briefing experience by combining relevant news content into a concise format.
-
-### Flow
+Daily briefings combine relevant, personalized stories into a concise, digestible view.
 
 ```text
 News Sources
@@ -545,37 +392,33 @@ User
 
 ---
 
-# 🐳 13. Docker Module
+## 🐳 13. Docker Module
 
-Newsr is containerized using **Docker Compose**.
+NewsPulse is containerized with Docker Compose for easier setup and deployment.
 
-Docker provides a consistent environment for running the application and its services.
-
-### Docker Architecture
+### Docker architecture
 
 ```text
 ┌───────────────────────────────────┐
 │          Docker Compose           │
 ├───────────────────────────────────┤
-│                                   │
-│     Frontend Container            │
-│             │                     │
-│             ▼                     │
-│     Backend Container             │
-│             │                     │
-│             ▼                     │
-│     Application Services          │
-│                                   │
+│   Frontend Container             │
+│            │                      │
+│            ▼                      │
+│   Backend Container              │
+│            │                      │
+│            ▼                      │
+│   MongoDB Service                │
 └───────────────────────────────────┘
 ```
 
-### Start Application
+### Start application
 
 ```bash
 docker compose up --build
 ```
 
-### Stop Application
+### Stop application
 
 ```bash
 docker compose down
@@ -583,11 +426,11 @@ docker compose down
 
 ---
 
-# ⚙️ 14. GitHub Actions CI
+## ⚙️ 14. GitHub Actions CI
 
-Newsr uses **GitHub Actions** for automated testing and continuous integration.
+The repository includes automated validation for backend tests and frontend build checks.
 
-### CI Workflow
+### CI workflow
 
 ```text
 Developer
@@ -600,19 +443,14 @@ GitHub Repository
     │
     ▼
 GitHub Actions
-    │
-    ├── Install Dependencies
-    │
-    ├── Run Tests
-    │
-    └── Validate Application
+    ├── Install dependencies
+    ├── Run backend tests
+    └── Validate frontend build
 ```
-
-This helps automatically validate changes pushed to the repository.
 
 ---
 
-# 🔄 Complete Newsr Workflow
+# 🔄 Complete NewsPulse Workflow
 
 ```text
                          ┌──────────────────┐
@@ -665,69 +503,65 @@ This helps automatically validate changes pushed to the repository.
 # 📂 Project Structure
 
 ```text
-Newsr/
-│
+newsr/
+├── backend/
+│   ├── app.py
+│   ├── auth.py
+│   ├── config.py
+│   ├── pdf_extractor.py
+│   ├── recommendation_service.py
+│   ├── recommender.py
+│   ├── storage.py
+│   ├── story_detector.py
+│   ├── trending_service.py
+│   ├── user_profile.py
+│   ├── tests/
+│   └── requirements.txt
 ├── frontend/
 │   ├── src/
-│   ├── components/
-│   ├── pages/
-│   └── ...
-│
-├── backend/
-│   ├── routes/
-│   ├── models/
-│   ├── services/
-│   └── ...
-│
+│   ├── public/
+│   ├── package.json
+│   ├── vite.config.js
+│   └── index.html
 ├── .github/
 │   └── workflows/
-│
-├── requirements.txt
-├── package.json
+├── .env.example
 ├── docker-compose.yml
+├── README.md
+├── start-backend.bat
+├── start-newsr.bat
 ├── .gitignore
-└── README.md
+└── .env
 ```
-
-> ⚠️ Update this structure if your actual repository uses different folder names.
 
 ---
 
 # 💻 Installation & Setup
 
-## 1️⃣ Clone Repository
+## 1️⃣ Clone repository
 
 ```bash
 git clone https://github.com/anam-tabassum64/Newsr.git
 cd Newsr
 ```
 
----
-
-## 2️⃣ Backend Setup
-
-Navigate to the backend directory:
+## 2️⃣ Backend setup
 
 ```bash
 cd backend
-```
-
-Create a virtual environment:
-
-```bash
-python -m venv venv
+python -m venv .venv
 ```
 
 ### Windows
 
 ```bash
-venv\Scripts\activate
+.venv\Scripts\activate
 ```
 
 ### Linux / macOS
 
 ```bash
-source venv/bin/activate
+source .venv/bin/activate
 ```
 
 Install dependencies:
@@ -736,49 +570,69 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
----
+Run the backend:
 
-## 3️⃣ Frontend Setup
+```bash
+python app.py
+```
 
-Open a new terminal and navigate to the frontend directory:
+## 3️⃣ Frontend setup
+
+Open a new terminal and run:
 
 ```bash
 cd frontend
+npm install
+npm run dev
 ```
 
-Install dependencies:
+Then open the local URL provided by Vite, typically:
 
-```bash
-npm install
+```text
+http://localhost:5173
 ```
 
 ---
 
 # 🔑 Environment Variables
 
-Create a `.env` file in the backend according to the configuration used by your project.
-
-Example:
+Create a `.env` file in the project root using the values below:
 
 ```env
-MONGO_URI=your_mongodb_connection_string
-
-NEWSDATA_API_KEY=your_newsdata_api_key
-CURRENTS_API_KEY=your_currents_api_key
-
-JWT_SECRET_KEY=your_secret_key
-
-MAIL_USERNAME=your_email
-MAIL_PASSWORD=your_app_password
+JWT_SECRET=replace-with-a-random-32-byte-secret
+JWT_EXPIRES_HOURS=24
+MONGO_URI=mongodb://localhost:27017
+MONGO_DB_NAME=newspulse
+NEWSDATA_API_KEY=YOUR_NEWSDATA_API_KEY
+CURRENTS_API_KEY=YOUR_CURRENTS_API_KEY
+MAIL_USERNAME=
+MAIL_PASSWORD=
+GOOGLE_CLIENT_ID=your-google-oauth-web-client-id.apps.googleusercontent.com
+VITE_GOOGLE_CLIENT_ID=your-google-oauth-web-client-id.apps.googleusercontent.com
+NEWS_CACHE_SECONDS=300
+MAX_PDF_BYTES=52428800
+STORY_SIMILARITY_THRESHOLD=0.72
+STORY_TITLE_THRESHOLD=0.5
+WEIGHT_BOOKMARK=5
+WEIGHT_LONG_READ=4
+WEIGHT_CLICK=2
+WEIGHT_SEARCH=3
+WEIGHT_CATEGORY_VIEW=1
+WEIGHT_SKIP=-1
+RECOMMEND_CONTENT_WEIGHT=0.45
+RECOMMEND_INTEREST_WEIGHT=0.25
+RECOMMEND_BEHAVIOR_WEIGHT=0.15
+RECOMMEND_TRENDING_WEIGHT=0.10
+RECOMMEND_RECENCY_WEIGHT=0.05
 ```
 
-> ⚠️ Never commit API keys, passwords, database credentials, or secret keys to GitHub.
+> ⚠️ Never commit real API keys, passwords, or secret values to GitHub.
 
 ---
 
 # ▶️ Running the Application
 
-## Start Backend
+## Start backend
 
 From the backend directory:
 
@@ -786,9 +640,7 @@ From the backend directory:
 python app.py
 ```
 
----
-
-## Start Frontend
+## Start frontend
 
 From the frontend directory:
 
@@ -796,19 +648,13 @@ From the frontend directory:
 npm run dev
 ```
 
-Then open the local URL provided by the frontend development server.
-
----
-
-# 🐳 Running with Docker
-
-Build and start the application:
+## Start with Docker
 
 ```bash
 docker compose up --build
 ```
 
-Stop the application:
+Stop with:
 
 ```bash
 docker compose down
@@ -818,141 +664,113 @@ docker compose down
 
 # 🛠️ Technology Stack
 
-| Category            | Technologies           |
-| ------------------- | ---------------------- |
-| 🎨 Frontend         | React.js, JavaScript   |
-| ⚙️ Backend          | Python, Flask          |
-| 🗄️ Database        | MongoDB, PyMongo       |
-| 🔌 APIs             | REST APIs, News APIs   |
-| 📡 Data Sources     | RSS Feeds              |
-| 🤖 Machine Learning | Scikit-learn, TF-IDF   |
-| 🔐 Authentication   | JWT                    |
+| Category | Technologies |
+|---|---|
+| 🎨 Frontend | React.js, JavaScript, Vite |
+| ⚙️ Backend | Python, Flask |
+| 🗄️ Database | MongoDB, PyMongo |
+| 🔌 APIs | REST APIs, News APIs, RSS |
+| 🤖 Machine Learning | Scikit-learn, TF-IDF |
+| 🔐 Authentication | JWT, Werkzeug |
 | 🐳 Containerization | Docker, Docker Compose |
-| ⚙️ CI               | GitHub Actions         |
-| 🔧 Version Control  | Git, GitHub            |
+| ⚙️ CI | GitHub Actions |
+| 🔧 Version Control | Git, GitHub |
 
 ---
 
 # 📊 Project Metrics
 
-| Metric                  | Details                 |
-| ----------------------- | ----------------------- |
-| 🚀 REST API Endpoints   | **22**                  |
-| 🗄️ MongoDB Collections | **8**                   |
-| 🔐 Authentication       | **JWT**                 |
-| 📰 News Sources         | **Multiple APIs + RSS** |
-| 🤖 Recommendation       | **Hybrid TF-IDF based** |
-| 🐳 Containerization     | **Docker Compose**      |
-| ⚙️ CI                   | **GitHub Actions**      |
+| Metric | Details |
+|---|---|
+| 🚀 Data sources | NewsData, Currents, Google News RSS |
+| 🔐 Authentication | JWT-based secure user access |
+| 📰 News sources | Multiple APIs + RSS feeds |
+| 🤖 Recommendation model | Hybrid TF-IDF + behavior-based scoring |
+| 🗄️ MongoDB collections | 8 main storage collections |
+| 🐳 Deployment | Docker Compose |
+| ⚙️ CI | GitHub Actions |
 
 ---
 
 # 📸 Screenshots
 
-Add your project screenshots inside a `screenshots/` directory.
-
-### 🏠 Home Page
+Add screenshots to a `screenshots/` folder when available.
 
 ```markdown
-![Newsr Home](screenshots/home.png)
-```
-
-### 🔐 Login
-
-```markdown
-![Newsr Login](screenshots/login.png)
-```
-
-### 📰 News Feed
-
-```markdown
-![Newsr News Feed](screenshots/news-feed.png)
-```
-
-### 🤖 Recommendations
-
-```markdown
-![Newsr Recommendations](screenshots/recommendations.png)
-```
-
-### 🔖 Bookmarks
-
-```markdown
-![Newsr Bookmarks](screenshots/bookmarks.png)
-```
-
-### 📊 Analytics
-
-```markdown
-![Newsr Analytics](screenshots/analytics.png)
+![NewsPulse Home](screenshots/home.png)
+![NewsPulse Login](screenshots/login.png)
+![NewsPulse Feed](screenshots/news-feed.png)
+![NewsPulse Recommendations](screenshots/recommendations.png)
+![NewsPulse Bookmarks](screenshots/bookmarks.png)
+![NewsPulse Analytics](screenshots/analytics.png)
 ```
 
 ---
 
 # 🎯 Project Highlights
 
-### 💻 Full-Stack Development
+### 💻 Full-stack development
 
-* React.js frontend
-* Flask/Python backend
-* REST API architecture
-* MongoDB persistence
+- React frontend
+- Flask backend
+- REST API architecture
+- MongoDB persistence
 
-### 🔌 Data Integration
+### 🔌 Data integration
 
-* Multiple News APIs
-* RSS feed integration
-* External API handling
-* Fallback mechanisms
+- Multiple news providers
+- RSS feed support
+- Fallback mechanisms
+- Structured article handling
 
-### 🤖 Intelligent Personalization
+### 🤖 Intelligent personalization
 
-* TF-IDF content similarity
-* User interests
-* Reading behavior
-* Trending content
-* Recency-based signals
+- TF-IDF similarity
+- User interest profiling
+- Reading behavior tracking
+- Trending content scoring
+- Recency-aware recommendations
 
-### 🔐 User Features
+### 🔐 User features
 
-* JWT authentication
-* Bookmarking
-* Reading history
-* Personalized preferences
-* Analytics
+- JWT authentication
+- Bookmarking
+- Reading history
+- Preferences
+- Analytics
 
-### 📝 Content Intelligence
+### 📝 Content intelligence
 
-* News summarization
-* PDF/text summarization
-* Daily briefings
+- News summarization
+- PDF and text summarization
+- Daily briefings
 
 ### 🐳 DevOps
 
-* Docker Compose
-* GitHub Actions
-* Automated testing
+- Docker Compose
+- GitHub Actions
+- Test automation
 
 ---
 
 # 🚀 Future Improvements
 
-* 🔴 Real-time breaking news notifications
-* ⚡ Redis caching
-* 🔍 Advanced semantic search
-* 🤖 Improved recommendation personalization
-* 📊 Recommendation evaluation metrics
-* 📡 Additional news providers
-* ☁️ Cloud deployment
-* 📱 Improved mobile responsiveness
-* 🔔 Personalized notifications
-* 🧠 More advanced NLP-based recommendations
+- 🔴 Real-time breaking news notifications
+- ⚡ Redis caching
+- 🔍 Advanced semantic search
+- 🤖 Improved recommendation quality
+- 📊 Deeper analytics dashboards
+- 📡 More news providers and source diversity
+- ☁️ Cloud deployment
+- 📱 Mobile-first experience improvements
+- 🔔 Personalized notifications
+- 🧠 More advanced NLP recommendation models
 
 ---
 
 # 🤝 Contributing
 
-Contributions are welcome!
+Contributions are welcome.
 
 ### 1. Fork the repository
 
@@ -970,7 +788,7 @@ git checkout -b feature/new-feature
 git commit -m "Add new feature"
 ```
 
-### 5. Push your branch
+### 5. Push the branch
 
 ```bash
 git push origin feature/new-feature
@@ -978,13 +796,13 @@ git push origin feature/new-feature
 
 ### 6. Open a Pull Request
 
-Suggestions, improvements, and feedback are welcome.
+Suggestions and improvements are encouraged.
 
 ---
 
 # 📄 License
 
-This project is licensed under the **MIT License**.
+This project is licensed under the MIT License.
 
 ---
 
@@ -993,22 +811,19 @@ This project is licensed under the **MIT License**.
 ## Anam Tabassum
 
 🎓 Computer Science & Engineering
-💻 Full-Stack Development
-📊 Data & Analytics
-🤖 Machine Learning
+💻 Full-stack development
+📊 Data & analytics
+🤖 Machine learning
 
 ### 🔗 Connect
 
-* GitHub: `anam-tabassum64`
-* LinkedIn: `anam64`
+- GitHub: `anam-tabassum64`
+- LinkedIn: `anam64`
 
 ---
 
-⭐ **If you found Newsr useful, consider giving the repository a star!**
+⭐ If you found NewsPulse useful, consider giving the repository a star.
 
 <p align="center">
-  Made with ❤️ using React, Flask, Python, MongoDB & Machine Learning
+  Made with ❤️ using React, Flask, Python, MongoDB, and machine learning.
 </p>
-```
-
-

@@ -691,20 +691,6 @@ docker compose down
 | ⚙️ CI | GitHub Actions |
 
 ---
-
-# 📸 Screenshots
-
-Add screenshots to a `screenshots/` folder when available.
-
-```markdown
-![NewsPulse Home](screenshots/home.png)
-![NewsPulse Login](screenshots/login.png)
-![NewsPulse Feed](screenshots/news-feed.png)
-![NewsPulse Recommendations](screenshots/recommendations.png)
-![NewsPulse Bookmarks](screenshots/bookmarks.png)
-![NewsPulse Analytics](screenshots/analytics.png)
-```
-
 ---
 
 # 🎯 Project Highlights
